@@ -25,6 +25,7 @@ public class HotelController {
 
     @PostMapping("")
     public ResponseEntity addHotel(@RequestBody Hotel hotel) {
+        hotel.setId(hotelService.getUUID());
         return hotelService.addHotel(hotel);
     }
 

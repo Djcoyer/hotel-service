@@ -10,7 +10,7 @@ import java.util.UUID;
 @Document(collection = "hotels")
 public class HotelDao {
     @Id
-    private String hotelId;
+    private String id;
     private String address;
     private String name;
     private String city;
@@ -21,7 +21,7 @@ public class HotelDao {
     public HotelDao(){}
 
     public HotelDao(String address, String name, String city, String state, String description, int zipCode, double rating){
-        this.hotelId = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID().toString();
         this.address = address;
         this.name = name;
         this.rating = rating;
@@ -31,8 +31,8 @@ public class HotelDao {
         this.zipCode = zipCode;
     }
 
-    public HotelDao(String hotelId, String address, String name, String city, String state, String description, int zipCode, long rating){
-        this.hotelId = hotelId;
+    public HotelDao(String id, String address, String name, String city, String state, String description, int zipCode, long rating){
+        this.id = id;
         this.address = address;
         this.name = name;
         this.rating = rating;

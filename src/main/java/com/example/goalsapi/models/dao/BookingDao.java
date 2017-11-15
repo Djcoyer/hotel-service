@@ -3,6 +3,7 @@ package com.example.goalsapi.models.dao;
 import com.example.goalsapi.models.CompositeKey;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
@@ -17,24 +18,30 @@ import java.util.stream.IntStream;
 @Document(collection = "bookings")
 public class BookingDao {
     @Id
-    private String bookingId;
+    private String id;
     private String customerId;
     private CompositeKey roomId;
-    private List<LocalDate> bookingDates;
+    private Date bookingStartDate;
+    private Date bookingEndDate;
+    private List<Date> bookingDates;
 
     public BookingDao(){}
 
-    public BookingDao(String customerId, String hotelId, int roomId, List<LocalDate> bookingDates) {
+    public BookingDao(String customerId, String hotelId, int roomNumber, List<Date> bookingDates, Date bookingStartDate, Date bookingEndDate) {
         this.customerId = customerId;
-        this.roomId = new CompositeKey(hotelId, roomId);
+        this.roomId = new CompositeKey(hotelId, roomNumber);
         this.bookingDates = bookingDates;
-        this.bookingId = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID().toString();
+        this.bookingStartDate = bookingStartDate;
+        this.bookingEndDate = bookingEndDate;
     }
 
-    public BookingDao(String bookingId, String customerId, String hotelId, int roomId, List<LocalDate> bookingDates) {
-        this.bookingId = bookingId;
+    public BookingDao(String id, String customerId, String hotelId, int roomNumber, List<Date> bookingDates, Date bookingStartDate, Date bookingEndDate) {
+        this.id = id;
         this.customerId = customerId;
-        this.roomId = new CompositeKey(hotelId, roomId);
+        this.roomId = new CompositeKey(hotelId, roomNumber);
         this.bookingDates = bookingDates;
+        this.bookingStartDate = bookingStartDate;
+        this.bookingEndDate = bookingEndDate;
     }
 }

@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Hotel {
-    private String hotelId;
+    private String id;
     private String name;
     private String address;
     private String city;
@@ -15,8 +15,8 @@ public class Hotel {
 
     public Hotel(){}
 
-    public Hotel(String hotelId, String name, String address, String city, String state, String description, int zipCode, double rating) {
-        this.hotelId = hotelId;
+    public Hotel(String id, String name, String address, String city, String state, String description, int zipCode, double rating) {
+        this.id = id;
         this.name = name;
         this.address = address;
         this.rating = rating;

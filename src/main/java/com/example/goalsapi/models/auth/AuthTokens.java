@@ -7,6 +7,7 @@ import lombok.Data;
 public class AuthTokens {
     private String id_token;
     private String access_token;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String refresh_token;
     private long expires_in;
 

@@ -13,9 +13,9 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
 
-    @GetMapping("")
-    public ResponseEntity getRooms() {
-        return roomService.getAllRooms();
+    @GetMapping("/{hotelId}")
+    public ResponseEntity getRooms(@PathVariable String hotelId) {
+        return roomService.getAllRooms(hotelId);
     }
 
     @GetMapping("/{hotelId}/{roomId}")

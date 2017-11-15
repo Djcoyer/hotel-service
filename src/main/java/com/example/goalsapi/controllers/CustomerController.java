@@ -1,8 +1,10 @@
 package com.example.goalsapi.controllers;
 
 import com.example.goalsapi.models.Customer;
+import com.example.goalsapi.services.AuthService;
 import com.example.goalsapi.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,23 +16,26 @@ public class CustomerController {
     private CustomerService customerService;
 
 
-    @GetMapping("/{customerId}")
-    public ResponseEntity getCustomer(@PathVariable String customerId) {
-        return customerService.getCustomer(customerId);
+    @GetMapping("")
+    @ResponseStatus(HttpStatus.OK)
+    public Customer getCustomer(@RequestHeader String authorization) {
+        return customerService.getCustomerFromHeader(authorization);
     }
 
     @PostMapping()
-    public ResponseEntity createCustomer(@RequestBody Customer customer)  {
+    @ResponseStatus(HttpStatus.OK)
+    public Customer createCustomer(@RequestBody Customer customer)  {
         return customerService.createCustomer(customer);
     }
 
-    @GetMapping("/{customerId}/bookings")
-    public ResponseEntity getCustomerBookings(@PathVariable String customerId) {
-        return customerService.getCustomerBookings(customerId);
-    }
+//    @GetMapping("/{customerId}/bookings")
+//    public ResponseEntity getCustomerBookings(@PathVariable String customerId) {
+//        return customerService.getCustomerBookings(customerId);
+//    }
 
     @PatchMapping("/{customerId}")
-    public ResponseEntity patchCustomer(@PathVariable String customerId, @RequestBody Customer customer) {
+    @ResponseStatus(HttpStatus.OK)
+    public Customer patchCustomer(@PathVariable String customerId, @RequestBody Customer customer) {
         return customerService.patchCustomer(customerId, customer);
     }
 }

@@ -16,6 +16,7 @@ public class CustomerDao {
     private String lastName;
     private Date birthday;
     private String emailAddress;
+    private String refreshToken;
 
     public CustomerDao(){}
 

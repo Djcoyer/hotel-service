@@ -9,22 +9,25 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "rooms")
 public class RoomDao {
     @Id
-    private CompositeKey roomId;
-    public String roomName;
+    private CompositeKey id;
+    public String name;
     private double pricePerNight;
+    private String details;
 
     public RoomDao(){}
 
-    public RoomDao(String hotelId, int roomId, String roomName, double pricePerNight) {
-        this.roomId = new CompositeKey(hotelId, roomId);
-        this.roomName = roomName;
+    public RoomDao(String hotelId, int roomId, String roomName, double pricePerNight, String details) {
+        this.id = new CompositeKey(hotelId, roomId);
+        this.name = roomName;
         this.pricePerNight = pricePerNight;
+        this.details = details;
     }
 
-    public RoomDao(CompositeKey roomId, String roomName, double pricePerNight) {
-        this.roomId = roomId;
-        this.roomName = roomName;
+    public RoomDao(CompositeKey roomId, String roomName, double pricePerNight, String details) {
+        this.id= roomId;
+        this.name = roomName;
         this.pricePerNight = pricePerNight;
+        this.details = details;
     }
 
 }

@@ -9,8 +9,9 @@ public class RoomTransformer {
         try{
             Room room = new Room();
             room.setPricePerNight(roomDao.getPricePerNight());
-            room.setRoomId(roomDao.getRoomId());
-            room.setRoomName(roomDao.getRoomName());
+            room.setId(roomDao.getId());
+            room.setDetails(roomDao.getDetails());
+            room.setName(roomDao.getName());
             return room;
         }catch(Exception e) {
             throw e;
@@ -21,8 +22,9 @@ public class RoomTransformer {
         try{
             RoomDao roomDao = new RoomDao();
             roomDao.setPricePerNight(room.getPricePerNight());
-            roomDao.setRoomId(room.getRoomId());
-            roomDao.setRoomName(room.getRoomName());
+            roomDao.setId(room.getId());
+            roomDao.setDetails(room.getDetails());
+            roomDao.setName(room.getName());
             return roomDao;
         }catch(Exception e){
             throw e;

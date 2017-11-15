@@ -1,41 +1,44 @@
 package com.example.goalsapi.services;
 
-import com.example.goalsapi.models.Booking;
+import com.example.goalsapi.Exceptions.InternalServerException;
+import com.example.goalsapi.Exceptions.InvalidInputException;
+import com.example.goalsapi.Exceptions.NotFoundException;
 import com.example.goalsapi.models.Customer;
+import com.example.goalsapi.models.auth.AuthTokens;
+import com.example.goalsapi.models.auth.LoginInfo;
 import com.example.goalsapi.models.dao.CustomerDao;
 import com.example.goalsapi.repositories.CustomerRepository;
 import com.example.goalsapi.transformers.CustomerTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class CustomerService {
 
-    @Autowired
     private CustomerRepository customerRepository;
-
+    private AuthService authService;
     @Autowired
-    private BookingService bookingService;
-
-    public CustomerService(CustomerRepository customerRepository, BookingService bookingService) {
+    public CustomerService(CustomerRepository customerRepository, AuthService authService) {
         this.customerRepository = customerRepository;
-        this.bookingService = bookingService;
+        this.authService = authService;
     }
 
-    public ResponseEntity getCustomer(String customerId) {
+    public String generateCustomerId() {
+        return UUID.randomUUID().toString();
+    }
+
+    public Customer getCustomerFromHeader(String authorization) {
         try{
+            String customerId = authService.getCustomerIdFromAuthorizationHeader(authorization);
             CustomerDao customerDao = customerRepository.findOne(customerId);
             if(customerDao != null && customerDao.getCustomerId() != null) {
                 Customer customer = CustomerTransformer.transform(customerDao);
-                return new ResponseEntity(customer, HttpStatus.OK);
+                return customer;
             }
             else{
-                return new ResponseEntity("Must supply valid customerId", HttpStatus.BAD_REQUEST);
+                throw new NotFoundException();
             }
         }catch(Exception e) {
             throw e;
@@ -43,43 +46,82 @@ public class CustomerService {
 
     }
 
-    public ResponseEntity createCustomer(Customer customer) {
-        try{
+
+    //region AUTH
+    public AuthTokens login(LoginInfo loginInfo){
+        AuthTokens authTokens = authService.login(loginInfo);
+        assignRefreshTokenToUser(authTokens.getId_token(), authTokens.getRefresh_token());
+        return authTokens;
+    }
+
+    private void assignRefreshTokenToUser(String id_token, String refresh_token) {
+        if(id_token == null || refresh_token == null) return;
+        String customerId = authService.getCustomerIdFromJwt(id_token);
+        setRefreshToken(customerId, refresh_token);
+    }
+
+    public void logout(String authorization){
+        String customerId = authService.getCustomerIdFromAuthorizationHeader(authorization);
+        String refreshToken = getRefreshToken(customerId);
+        authService.revokeAuthRefreshToken(refreshToken);
+        revokeRefreshToken(customerId);
+    }
+
+
+    //endregion
+
+    public Customer getCustomerById(String customerId){
+        if(!customerRepository.exists(customerId)) throw new NotFoundException();
+        CustomerDao customerDao = customerRepository.findOne(customerId);
+        Customer customer = CustomerTransformer.transform(customerDao);
+        return customer;
+    }
+
+    public Customer createCustomer(Customer customer) {
             if(customer != null) {
-                customer.setCustomerId(UUID.randomUUID().toString());
                 CustomerDao customerDao = CustomerTransformer.transform(customer);
                 customerRepository.insert(customerDao);
-                return new ResponseEntity(customerDao.getCustomerId(), HttpStatus.OK);
+                return customer;
             }
             else{
-                return new ResponseEntity("Must supply a customer object", HttpStatus.BAD_REQUEST);
+                throw new InvalidInputException();
             }
-        } catch(Exception e) {
-            throw e;
         }
-    }
 
-    public ResponseEntity getCustomerBookings(String customerId) {
-        if(getCustomer(customerId) == null) {
-            return new ResponseEntity("Must provide valid Customer ID", HttpStatus.BAD_REQUEST);
-        }
-        List<Booking> customerBookings = bookingService.getBookingsByCustomerId(customerId);
-        if(customerBookings == null || customerBookings.size() == 0) {
-            return new ResponseEntity("No bookings found for this customer", HttpStatus.OK);
-        }
-        return new ResponseEntity(customerBookings, HttpStatus.OK);
-    }
-
-    public ResponseEntity patchCustomer(String customerId, Customer customer) {
+    public Customer patchCustomer(String customerId, Customer customer) {
         if(customerId == null || customer == null) {
-            return new ResponseEntity("Must provide valid input for customer and customer ID", HttpStatus.BAD_REQUEST);
+            throw new InvalidInputException();
         }
         if(!customerRepository.exists(customerId)){
-            return new ResponseEntity("Invalid Customer ID", HttpStatus.BAD_REQUEST);
+            throw new NotFoundException();
         }
         customer.setCustomerId(customerId);
         CustomerDao _customerDao = CustomerTransformer.transform(customer);
         customerRepository.save(_customerDao);
-        return new ResponseEntity(_customerDao, HttpStatus.OK);
+        return customer;
+    }
+
+    private CustomerDao getCustomerDaoById(String customerId){
+        CustomerDao customerDao = customerRepository.findOne(customerId);
+        if(customerDao.getEmailAddress() == null) throw new NotFoundException();
+        return customerDao;
+    }
+
+    public void setRefreshToken(String customerId, String refresh_token) {
+        CustomerDao customerDao = getCustomerDaoById(customerId);
+        customerDao.setRefreshToken(refresh_token);
+        customerRepository.save(customerDao);
+    }
+
+    public void revokeRefreshToken(String customerId){
+        CustomerDao customerDao = getCustomerDaoById(customerId);
+        customerDao.setRefreshToken(null);
+        customerRepository.save(customerDao);
+    }
+
+    public String getRefreshToken(String customerId) {
+        CustomerDao customerDao = customerRepository.getRefreshToken(customerId);
+        String refreshToken = customerDao.getRefreshToken();
+        return refreshToken;
     }
 }
