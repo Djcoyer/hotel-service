@@ -1,5 +1,6 @@
 package com.example.goalsapi.services;
 
+import com.example.goalsapi.Exceptions.ForbiddenException;
 import com.example.goalsapi.Exceptions.InternalServerException;
 import com.example.goalsapi.Exceptions.InvalidInputException;
 import com.example.goalsapi.Exceptions.NotFoundException;
@@ -30,7 +31,6 @@ public class CustomerService {
     }
 
     public Customer getCustomerFromHeader(String authorization) {
-        try{
             String customerId = authService.getCustomerIdFromAuthorizationHeader(authorization);
             CustomerDao customerDao = customerRepository.findOne(customerId);
             if(customerDao != null && customerDao.getCustomerId() != null) {
@@ -40,14 +40,13 @@ public class CustomerService {
             else{
                 throw new NotFoundException();
             }
-        }catch(Exception e) {
-            throw e;
         }
-
-    }
 
 
     //region AUTH
+
+    //region LOGIN
+
     public AuthTokens login(LoginInfo loginInfo){
         AuthTokens authTokens = authService.login(loginInfo);
         assignRefreshTokenToUser(authTokens.getId_token(), authTokens.getRefresh_token());
@@ -55,10 +54,20 @@ public class CustomerService {
     }
 
     private void assignRefreshTokenToUser(String id_token, String refresh_token) {
-        if(id_token == null || refresh_token == null) return;
+        if(id_token == null || refresh_token == null) throw new ForbiddenException();
         String customerId = authService.getCustomerIdFromJwt(id_token);
         setRefreshToken(customerId, refresh_token);
     }
+
+    public void setRefreshToken(String customerId, String refresh_token) {
+        CustomerDao customerDao = getCustomerDaoById(customerId);
+        customerDao.setRefreshToken(refresh_token);
+        customerRepository.save(customerDao);
+    }
+
+    //endregion
+
+    //region LOGOUT
 
     public void logout(String authorization){
         String customerId = authService.getCustomerIdFromAuthorizationHeader(authorization);
@@ -67,6 +76,19 @@ public class CustomerService {
         revokeRefreshToken(customerId);
     }
 
+    public void revokeRefreshToken(String customerId){
+        CustomerDao customerDao = getCustomerDaoById(customerId);
+        customerDao.setRefreshToken(null);
+        customerRepository.save(customerDao);
+    }
+
+    public String getRefreshToken(String customerId) {
+        CustomerDao customerDao = customerRepository.getRefreshToken(customerId);
+        String refreshToken = customerDao.getRefreshToken();
+        return refreshToken;
+    }
+
+    //endregion
 
     //endregion
 
@@ -107,21 +129,4 @@ public class CustomerService {
         return customerDao;
     }
 
-    public void setRefreshToken(String customerId, String refresh_token) {
-        CustomerDao customerDao = getCustomerDaoById(customerId);
-        customerDao.setRefreshToken(refresh_token);
-        customerRepository.save(customerDao);
-    }
-
-    public void revokeRefreshToken(String customerId){
-        CustomerDao customerDao = getCustomerDaoById(customerId);
-        customerDao.setRefreshToken(null);
-        customerRepository.save(customerDao);
-    }
-
-    public String getRefreshToken(String customerId) {
-        CustomerDao customerDao = customerRepository.getRefreshToken(customerId);
-        String refreshToken = customerDao.getRefreshToken();
-        return refreshToken;
-    }
 }

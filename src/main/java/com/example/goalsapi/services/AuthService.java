@@ -51,7 +51,7 @@ public class AuthService {
             AuthTokens tokens = getTokens(holder);
             return tokens;
         } catch (Auth0Exception e) {
-            throw new ForbiddenException();
+            throw new InvalidInputException();
         }
     }
 

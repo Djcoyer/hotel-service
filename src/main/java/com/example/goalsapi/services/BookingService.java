@@ -37,15 +37,18 @@ public class BookingService {
     private BookingRepository bookingRepository;
     private AuthService authService;
     private RoomService roomService;
+    private HotelService hotelService;
 
     Mongo mongo = new Mongo("localhost");
     private MongoTemplate mongoTemplate = new MongoTemplate(mongo, "Hotels");
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, AuthService authService, RoomService roomService){
+    public BookingService(BookingRepository bookingRepository, AuthService authService,
+                          RoomService roomService, HotelService hotelService){
         this.bookingRepository = bookingRepository;
         this.authService = authService;
         this.roomService = roomService;
+        this.hotelService = hotelService;
     }
 
     //region Get Bookings
@@ -81,6 +84,7 @@ public class BookingService {
         List<Booking> bookings = convertDaoList(bookingDaos);
         for(Booking booking: bookings){
             booking.setRoomName(roomService.getRoomName(booking.getRoomId()));
+            booking.setHotelName(hotelService.getHotelNameFromId(booking.getRoomId().getHotelId()));
         }
         return bookings;
     }

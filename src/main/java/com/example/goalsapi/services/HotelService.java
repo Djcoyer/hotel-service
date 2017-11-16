@@ -1,5 +1,8 @@
 package com.example.goalsapi.services;
 
+import com.example.goalsapi.Exceptions.InternalServerException;
+import com.example.goalsapi.Exceptions.InvalidInputException;
+import com.example.goalsapi.Exceptions.NotFoundException;
 import com.example.goalsapi.models.Hotel;
 import com.example.goalsapi.models.dao.HotelDao;
 import com.example.goalsapi.repositories.HotelRepository;
@@ -28,49 +31,39 @@ public class HotelService {
         this.hotelRepository = hotelRepository;
     }
 
-    public ResponseEntity getHotel(String hotelId) {
-        try{
-            HotelDao hotelDao = hotelRepository.findOne(hotelId);
-            if(hotelDao != null){
-                Hotel hotel = HotelTransformer.transform(hotelDao);
-                return new ResponseEntity(hotel, HttpStatus.OK);
-            }
-            else{
-                return new ResponseEntity(HttpStatus.BAD_REQUEST);
-            }
-        } catch(Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public Hotel getHotel(String hotelId) {
+        if (hotelId == null) throw new InvalidInputException();
+        HotelDao hotelDao = hotelRepository.findOne(hotelId);
+        if (hotelDao != null) {
+            Hotel hotel = HotelTransformer.transform(hotelDao);
+            return hotel;
+        } else {
+            throw new NotFoundException();
         }
     }
 
-    public String getUUID(){
-        return UUID.randomUUID().toString();
-    }
-
-    public ResponseEntity addHotel(Hotel hotel) {
-        try {
-            if (hotel == null) {
-                return new ResponseEntity("Must include valid hotel object", HttpStatus.BAD_REQUEST);
-            }
+    public Hotel addHotel(Hotel hotel) {
+            if (hotel == null || hotel.getName() == null) throw new InvalidInputException();
             HotelDao hotelDao = HotelTransformer.transform(hotel);
             hotelRepository.insert(hotelDao);
-            return new ResponseEntity(hotelDao, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return hotel;
         }
-    }
 
-    public ResponseEntity getAllHotels() {
-        try{
+    public List<Hotel> getAllHotels() {
             List<HotelDao> hotelDaos = hotelRepository.findAll();
             List<Hotel> hotels = new ArrayList<>();
-            for(HotelDao hotelDao : hotelDaos) {
+            for (HotelDao hotelDao : hotelDaos) {
                 hotels.add(HotelTransformer.transform(hotelDao));
             }
-            return new ResponseEntity(hotels, HttpStatus.OK);
-        }catch(Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            return hotels;
+    }
+
+    public String getHotelNameFromId(String hotelId){
+        if(hotelId == null) throw new InvalidInputException();
+        HotelDao hotelDao = hotelRepository.findHotelNameById(hotelId);
+        String name = hotelDao.getName();
+        if(name == null) throw new NotFoundException();
+        return name;
     }
 
     public boolean hotelExists(String hotelId) {
